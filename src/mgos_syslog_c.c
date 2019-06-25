@@ -148,3 +148,31 @@ void mgos_syslog_log_debug(const char *app_name, const char *fmt, ...) {
 bool mgos_syslog_init(void) {
   return true;
 }
+
+#define SYSLOG_URL_BUF_SIZE 30
+char syslog_url_buf[SYSLOG_URL_BUF_SIZE];
+
+/**
+ * @Reinit the server with the new syslog server address and hostname.
+ */
+void reinit_syslog(char *syslog_svr_addr, char *syslog_svr_hostname) {
+    char *old_syslog_url = (char *)mgos_sys_config_get_syslog_url();
+    char *old_syslog_hostname = (char *)mgos_sys_config_get_syslog_hostname();
+
+    if( syslog_svr_addr != NULL && strlen(syslog_svr_addr) > 0 ) {
+        snprintf(syslog_url_buf, SYSLOG_URL_BUF_SIZE, "udp://%s:514", syslog_svr_addr);
+        //If the URL is not set to the current value change the stored value.
+        if( old_syslog_url == NULL || strcmp(old_syslog_url, syslog_url_buf) != 0 ) {
+            mgos_sys_config_set_syslog_url(syslog_url_buf);
+        }
+    }
+
+    if( syslog_svr_hostname != NULL && strlen(syslog_svr_hostname) > 0 ) {
+        //If the hostname is not set to the current value change the stored value.
+        if( old_syslog_hostname == NULL || strcmp(old_syslog_hostname, syslog_svr_hostname) != 0 ) {
+            mgos_sys_config_set_syslog_hostname(syslog_svr_hostname);
+        }
+    }
+
+    init();
+}
