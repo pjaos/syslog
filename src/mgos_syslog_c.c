@@ -114,38 +114,50 @@ static void mgos_syslog_log(enum mgos_syslog_facility fac, enum mgos_syslog_faci
 }
 
 void mgos_syslog_log_error(const char *app_name, const char *fmt, ...) {
-  va_list arg;
-  va_start(arg, fmt);
-  mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_ERR, app_name, fmt, arg);
-  va_end(arg);
+    if( mgos_sys_config_get_ydev_enable_syslog() ) {
+        va_list arg;
+        va_start(arg, fmt);
+        mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_ERR, app_name, fmt, arg);
+        va_end(arg);
+    }
+
 }
 
 void mgos_syslog_log_warn(const char *app_name, const char *fmt, ...) {
-  va_list arg;
-  va_start(arg, fmt);
-  mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_WARNING, app_name, fmt, arg);
-  va_end(arg);
+    if( mgos_sys_config_get_ydev_enable_syslog() ) {
+        va_list arg;
+        va_start(arg, fmt);
+        mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_WARNING, app_name, fmt, arg);
+        va_end(arg);
+    }
 }
 
 void mgos_syslog_log_info(const char *app_name, const char *fmt, ...) {
-  va_list arg;
-  va_start(arg, fmt);
-  mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_INFO, app_name, fmt, arg);
-  va_end(arg);
+    if( mgos_sys_config_get_ydev_enable_syslog() ) {
+
+        va_list arg;
+        va_start(arg, fmt);
+        mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_INFO, app_name, fmt, arg);
+        va_end(arg);
+    }
 }
 
 void mgos_syslog_log_notice(const char *app_name, const char *fmt, ...) {
-  va_list arg;
-  va_start(arg, fmt);
-  mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_NOTICE, app_name, fmt, arg);
-  va_end(arg);
+    if( mgos_sys_config_get_ydev_enable_syslog() ) {
+        va_list arg;
+        va_start(arg, fmt);
+        mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_NOTICE, app_name, fmt, arg);
+        va_end(arg);
+    }
 }
 
 void mgos_syslog_log_debug(const char *app_name, const char *fmt, ...) {
-  va_list arg;
-  va_start(arg, fmt);
-  mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_DEBUG, app_name, fmt, arg);
-  va_end(arg);
+    if( mgos_sys_config_get_ydev_enable_syslog() ) {
+        va_list arg;
+        va_start(arg, fmt);
+        mgos_syslog_log(SYSLOG_FAC_LOCAL0, SYSLOG_PRIO_DEBUG, app_name, fmt, arg);
+        va_end(arg);
+    }
 }
 
 bool mgos_syslog_init(void) {
@@ -156,7 +168,12 @@ bool mgos_syslog_init(void) {
 char syslog_url_buf[SYSLOG_URL_BUF_SIZE];
 
 /**
- * @Reinit the server with the new syslog server address and hostname.
+ * @brief Reinit the server with the new syslog server address and hostname.
+ *        If the syslog_svr_addr and syslog_svr_hostname are both NULL or zero
+ *        length strings then the sysloging is disabled.
+ *
+ * @param syslog_svr_addr A null terminated string of the syslog server address.
+ * @param syslog_svr_hostname The host name of the syslog server.
  */
 void reinit_syslog(char *syslog_svr_addr, char *syslog_svr_hostname) {
     char *old_syslog_url = (char *)mgos_sys_config_get_syslog_url();
@@ -167,6 +184,7 @@ void reinit_syslog(char *syslog_svr_addr, char *syslog_svr_hostname) {
         //If the URL is not set to the current value change the stored value.
         if( old_syslog_url == NULL || strcmp(old_syslog_url, syslog_url_buf) != 0 ) {
             mgos_sys_config_set_syslog_url(syslog_url_buf);
+            mgos_sys_config_set_ydev_enable_syslog(true);
         }
     }
 
@@ -175,6 +193,13 @@ void reinit_syslog(char *syslog_svr_addr, char *syslog_svr_hostname) {
         if( old_syslog_hostname == NULL || strcmp(old_syslog_hostname, syslog_svr_hostname) != 0 ) {
             mgos_sys_config_set_syslog_hostname(syslog_svr_hostname);
         }
+    }
+
+    //If the syslog server address and hostname are set to NULL or zero length strings
+    //disable the syslog server.
+    if( (syslog_svr_addr == NULL || strlen(syslog_svr_addr) == 0) &&
+        (syslog_svr_hostname == NULL || strlen(syslog_svr_hostname) == 0) ) {
+        mgos_sys_config_set_ydev_enable_syslog(false);
     }
 
     init();
